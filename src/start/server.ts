@@ -21,7 +21,7 @@ export class Server {
         this._expressApp.listen(this._config.SERVER_PORT, () => {
             console.log(`Server running on port: ${this._config.SERVER_PORT}`);
         })
-        //await this._sqs.sendMessageToQueue("My Third Message to Amazon SQS")
+        //await this._sqs.sendMessageToQueue("SQS Test")
         await this._sqs.receiveMessageFromQueue()
     }
 }

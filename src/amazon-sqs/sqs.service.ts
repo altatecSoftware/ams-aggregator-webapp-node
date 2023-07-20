@@ -1,5 +1,5 @@
 
-import { SQSClient, SendMessageCommand, ReceiveMessageCommand } from "@aws-sdk/client-sqs";
+import { SQSClient, SendMessageCommand, ReceiveMessageCommand, DeleteMessageCommand } from "@aws-sdk/client-sqs";
 import { ISQSObjectConfig } from "./interfaces";
 
 export class SimpleQueueService {
@@ -7,11 +7,11 @@ export class SimpleQueueService {
     private _queueUrl: string
     private _sqsClient: SQSClient
 
-    constructor({ config }: any){
+    constructor({ config }: any) {
         this._configObject = {
-            region: config.AWS_REGION, 
+            region: config.AWS_REGION,
             credentials: {
-                accessKeyId: config.AWS_SQS_ACCESS_KEY_ID, 
+                accessKeyId: config.AWS_SQS_ACCESS_KEY_ID,
                 secretAccessKey: config.AWS_SQS_SECRET_ACCESS_KEY
             }
         }
@@ -19,7 +19,7 @@ export class SimpleQueueService {
         this._queueUrl = config.AWS_SQS_CREATE_ASSET_QUEUE
     }
 
-    public async sendMessageToQueue(message: any){
+    public async sendMessageToQueue(message: any) {
         try {
 
             const command = new SendMessageCommand({
@@ -27,33 +27,47 @@ export class SimpleQueueService {
                 MessageBody: message,
                 MessageAttributes: {
                     OrderId: {
-                        DataType: 'String', 
+                        DataType: 'String',
                         StringValue: '4421x'
                     }
                 }
             })
 
-            const result = await this._sqsClient.send(command)
-            console.log("Message sent: ", result)
-            
+            const response = await this._sqsClient.send(command)
+            console.log("Message sent: ", response)
+
         } catch (error) {
             console.log("Error sending message to SQS service\n", error)
         }
     }
 
-    public async receiveMessageFromQueue(){
+    public async receiveMessageFromQueue() {
         try {
 
             const command = new ReceiveMessageCommand({
-                MaxNumberOfMessages: 10, 
-                QueueUrl: this._queueUrl, 
-                WaitTimeSeconds: 5, 
+                MaxNumberOfMessages: 10,
+                QueueUrl: this._queueUrl,
+                WaitTimeSeconds: 5,
                 MessageAttributeNames: ["All"]
             })
 
-            const result = await this._sqsClient.send(command)
-            console.log("Mesage received: ", result)
-            
+            const response = await this._sqsClient.send(command)
+            const messages = response.Messages
+
+            if (messages) {
+                messages.forEach(async (message) => {
+                    console.log("Message received: ", message.Body)
+
+                    const deleteCommand = new DeleteMessageCommand({
+                        QueueUrl: this._queueUrl,
+                        ReceiptHandle: message.ReceiptHandle
+                    })
+
+                    await this._sqsClient.send(deleteCommand)
+                    console.log('Mensaje eliminado de la cola:', message.MessageId);
+                })
+            }
+
         } catch (error) {
             console.log("Error receiving message from SQS service\n", error)
         }
