@@ -1,5 +1,5 @@
 
-import { SQSClient, SendMessageCommand, ReceiveMessageCommand, DeleteMessageCommand } from "@aws-sdk/client-sqs";
+import { SQSClient, SendMessageCommand, ReceiveMessageCommand, DeleteMessageCommand, ListQueuesCommand } from "@aws-sdk/client-sqs";
 import { ISQSObjectConfig } from "./interfaces";
 
 export class SimpleQueueService {
@@ -64,7 +64,7 @@ export class SimpleQueueService {
                     })
 
                     await this._sqsClient.send(deleteCommand)
-                    console.log('Mensaje eliminado de la cola:', message.MessageId);
+                    console.log('Message removed from queue:', message.MessageId);
                 })
             }
 
@@ -72,6 +72,24 @@ export class SimpleQueueService {
             console.log("Error receiving message from SQS service\n", error)
         }
     }
+
+    public async checkSQSConnection() {
+        try {
+            const command = new ListQueuesCommand({});
+            const response = await this._sqsClient.send(command);
+        
+            if (response.QueueUrls && response.QueueUrls.length > 0) {
+              console.log("Connection to Amazon SQS successful.");
+              return true;
+            } else {
+              console.log("No queues were found on the account.");
+              return false;
+            }
+          } catch (error) {
+            console.error("Error checking connection to SQS:", error);
+            return false;
+          }
+      }
 
 
 }
