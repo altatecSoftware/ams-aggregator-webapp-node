@@ -1,20 +1,20 @@
 version: "3.8"
-services: 
-  aggregate-db: 
+services:
+  aggregate-db:
     container_name: aggregate-db
     image: mongo:6.0.5
     restart: always
     volumes:
       - mongodb_data:/data/aggregate_db
-    environment: 
+    environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: example
-    expose: 
-    - "27017" 
-    ports: 
-    - "27017:27017"
+    expose:
+      - "27017"
+    ports:
+      - "27017:27017"
     networks:
-    - wms
+      - wms
   aggregate-ms:
     container_name: aggregate-ms
     depends_on:
@@ -24,10 +24,9 @@ services:
     ports:
       - 3000:3000
     networks:
-        - wms
+      - wms
+volumes:
+  mongodb_data:
 networks:
   wms:
     external: true
-
-
-    
